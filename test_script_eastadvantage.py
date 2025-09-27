@@ -42,10 +42,14 @@ ordr = pd.read_sql("SELECT * FROM Orders", conn)
 ord_det = pd.read_sql("SELECT * FROM OrderDetails", conn)
 itm = pd.read_sql("SELECT * FROM Items", conn)
 
-# Merge all tables into one
-merged = cust.merge(ordr, on="CustomerID") \
-             .merge(ord_det, on="OrderID") \
-             .merge(itm, on="ItemID")
+# Merge customers with orders
+cust_orders = cust.merge(ordr, on="CustomerID")
+
+# Merge the result with order details
+cust_orders_details = cust_orders.merge(ord_det, on="OrderID")
+
+# Finally, merge with items
+final_data = cust_orders_details.merge(itm, on="ItemID")
 
 # Filter age 18–35
 merged = merged[(merged["Age"] >= 18) & (merged["Age"] <= 35)]
@@ -63,6 +67,7 @@ final_data = final_data[final_data["Quantity"] > 0]
 final_data.to_csv("output_pandas.csv", sep=";", index=False)
 
 print("✅ Pandas results saved to output_pandas.csv")
+
 
 
 conn.close()
