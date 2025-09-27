@@ -36,20 +36,16 @@ print("SQL results saved to output_sql.csv")
 # ======================================
 # 3. Pandas solution
 # ======================================
-# Load each table
-cust = pd.read_sql("SELECT * FROM Customers", conn)
-ordr = pd.read_sql("SELECT * FROM Orders", conn)
-ord_det = pd.read_sql("SELECT * FROM OrderDetails", conn)
-itm = pd.read_sql("SELECT * FROM Items", conn)
+# Load each table into pandas
+customers = pd.read_sql("SELECT * FROM Customers", conn)
+orders = pd.read_sql("SELECT * FROM Orders", conn)
+order_details = pd.read_sql("SELECT * FROM OrderDetails", conn)
+items = pd.read_sql("SELECT * FROM Items", conn)
 
-# Merge customers with orders
-cust_orders = cust.merge(ordr, on="CustomerID")
-
-# Merge the result with order details
-cust_orders_details = cust_orders.merge(ord_det, on="OrderID")
-
-# Finally, merge with items
-final_data = cust_orders_details.merge(itm, on="ItemID")
+# Merge step by step
+cust_orders = customers.merge(orders, on="CustomerID")
+cust_orders_details = cust_orders.merge(order_details, on="OrderID")
+merged = cust_orders_details.merge(items, on="ItemID")
 
 # Filter age 18–35
 merged = merged[(merged["Age"] >= 18) & (merged["Age"] <= 35)]
@@ -57,7 +53,7 @@ merged = merged[(merged["Age"] >= 18) & (merged["Age"] <= 35)]
 # Replace missing quantities with 0
 merged["Quantity"] = merged["Quantity"].fillna(0).astype(int)
 
-# Group by Customer, Age, Item
+# Group by Customer, Age, Item and sum Quantity
 final_data = merged.groupby(["CustomerID", "Age", "ItemName"], as_index=False)["Quantity"].sum()
 
 # Remove rows where Quantity = 0
@@ -66,8 +62,7 @@ final_data = final_data[final_data["Quantity"] > 0]
 # Save Pandas results to CSV
 final_data.to_csv("output_pandas.csv", sep=";", index=False)
 
-print("✅ Pandas results saved to output_pandas.csv")
-
 
 
 conn.close()
+
